@@ -1,0 +1,32 @@
+{
+  "name": "ai-stacks",
+  "version": "0.1.0",
+  "description": "A monorepo for AI side projects - packages, tools, and applications",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "prettier": "^3.2.5",
+    "turbo": "^1.13.0",
+    "typescript": "^5.4.5"
+  },
+  "workspaces": [
+    "packages/*",
+    "projects/*",
+    "tools/*"
+  ]
+}
+Co-Authored-By: Paperclip <noreply@paperclip.ing>
