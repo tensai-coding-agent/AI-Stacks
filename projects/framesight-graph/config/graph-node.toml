@@ -1,0 +1,54 @@
+[general]
+query = "${GRAPH_NODE_QUERY_ENDPOINT:-http://localhost:8000}"
+status = "${GRAPH_NODE_STATUS_ENDPOINT:-http://localhost:8020}"
+indexer = "${GRAPH_NODE_INDEXER_ENDPOINT:-http://localhost:8030}"
+metrics = "${GRAPH_NODE_METRICS_ENDPOINT:-http://localhost:8040}"
+
+[store]
+[store.primary]
+connection = "postgresql://graphnode:graphnode@graph-postgres:5432/graphnode"
+pool_size = ${GRAPH_DB_POOL_SIZE:-10}
+
+# Additional store configurations for sharding (future scaling)
+# [store.secondary]
+# connection = "postgresql://..."
+# pool_size = 10
+
+[chains]
+[chains.mainnet]
+shard = "primary"
+provider = [
+  { label = "mainnet", url = "${ETH_RPC_URL:-https://eth-mainnet.g.alchemy.com/v2/demo}", features = ["archive", "traces"] }
+]
+
+[chains.polygon]
+shard = "primary"
+provider = [
+  { label = "polygon", url = "${POLYGON_RPC_URL:-https://polygon-mainnet.g.alchemy.com/v2/demo}", features = ["archive"] }
+]
+
+[chains.optimism]
+shard = "primary"
+provider = [
+  { label = "optimism", url = "${OPTIMISM_RPC_URL:-https://opt-mainnet.g.alchemy.com/v2/demo}", features = ["archive"] }
+]
+
+[chains.arbitrum]
+shard = "primary"
+provider = [
+  { label = "arbitrum", url = "${ARBITRUM_RPC_URL:-https://arb-mainnet.g.alchemy.com/v2/demo}", features = ["archive"] }
+]
+
+[chains.base]
+shard = "primary"
+provider = [
+  { label = "base", url = "${BASE_RPC_URL:-https://base-mainnet.g.alchemy.com/v2/demo}", features = ["archive"] }
+]
+
+[deployment]
+# Deployment rules for subgraph assignment to nodes
+[[deployment.rule]]
+indexers = [ "default" ]
+
+[logging]
+level = "${GRAPH_LOG_LEVEL:-info}"

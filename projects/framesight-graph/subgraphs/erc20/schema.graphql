@@ -1,0 +1,84 @@
+type Transfer @entity {
+  id: ID!
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  from: Account!
+  to: Account!
+  value: BigInt!
+  token: Token!
+  gasUsed: BigInt
+  gasPrice: BigInt
+}
+
+type Approval @entity {
+  id: ID!
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  owner: Account!
+  spender: Account!
+  value: BigInt!
+  token: Token!
+}
+
+type Token @entity {
+  id: ID!
+  address: Bytes!
+  symbol: String!
+  name: String!
+  decimals: Int!
+  totalSupply: BigInt!
+  transferCount: BigInt!
+  holderCount: BigInt!
+  createdAt: BigInt!
+  createdAtBlock: BigInt!
+  
+  # Relations
+  transfersFrom: [Transfer!]! @derivedFrom(field: "token")
+  balances: [AccountBalance!]! @derivedFrom(field: "token")
+}
+
+type Account @entity {
+  id: ID!
+  address: Bytes!
+  createdAt: BigInt!
+  createdAtBlock: BigInt!
+  
+  # ERC20 stats
+  tokenBalances: [AccountBalance!]! @derivedFrom(field: "account")
+  transfersFrom: [Transfer!]! @derivedFrom(field: "from")
+  transfersTo: [Transfer!]! @derivedFrom(field: "to")
+  approvalsOwner: [Approval!]! @derivedFrom(field: "owner")
+  approvalsSpender: [Approval!]! @derivedFrom(field: "spender")
+}
+
+type AccountBalance @entity {
+  id: ID!
+  account: Account!
+  token: Token!
+  balance: BigInt!
+  updatedAt: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+# Time-series aggregates for analytics
+type DailyTransferVolume @entity {
+  id: ID!  # tokenAddress-dayTimestamp
+  token: Token!
+  date: String!
+  timestamp: BigInt!
+  transferCount: BigInt!
+  totalVolume: BigInt!
+  totalValueUSD: BigDecimal
+}
+
+type HourlyTransferVolume @entity {
+  id: ID!  # tokenAddress-hourTimestamp
+  token: Token!
+  hour: String!
+  timestamp: BigInt!
+  transferCount: BigInt!
+  totalVolume: BigInt!
+  totalValueUSD: BigDecimal
+}

@@ -1,0 +1,108 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  # ERC-721 NFT contracts
+  - kind: ethereum
+    name: ERC721
+    network: mainnet
+    source:
+      abi: ERC721
+      startBlock: 10000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NFTContract
+        - NFTToken
+        - NFTTransfer
+        - Account
+      abis:
+        - name: ERC721
+          file: ./abis/ERC721.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,indexed uint256)
+          handler: handleApproval
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+      file: ./src/erc721-mapping.ts
+
+  # ERC-1155 Multi-token contracts
+  - kind: ethereum
+    name: ERC1155
+    network: mainnet
+    source:
+      abi: ERC1155
+      startBlock: 10000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NFTContract
+        - NFTToken
+        - NFTTransfer
+        - Account
+      abis:
+        - name: ERC1155
+          file: ./abis/ERC1155.json
+      eventHandlers:
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+      file: ./src/erc1155-mapping.ts
+
+templates:
+  - kind: ethereum
+    name: ERC721Token
+    network: mainnet
+    source:
+      abi: ERC721
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NFTContract
+        - NFTToken
+        - NFTTransfer
+        - Account
+      abis:
+        - name: ERC721
+          file: ./abis/ERC721.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: Approval(indexed address,indexed address,indexed uint256)
+          handler: handleApproval
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+      file: ./src/erc721-mapping.ts
+
+  - kind: ethereum
+    name: ERC1155Token
+    network: mainnet
+    source:
+      abi: ERC1155
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - NFTContract
+        - NFTToken
+        - NFTTransfer
+        - Account
+      abis:
+        - name: ERC1155
+          file: ./abis/ERC1155.json
+      eventHandlers:
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+      file: ./src/erc1155-mapping.ts

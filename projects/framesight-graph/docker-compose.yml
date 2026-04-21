@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for Graph Node metadata store
+  graph-postgres:
+    image: postgres:15-alpine
+    container_name: framesight-graph-postgres
+    environment:
+      POSTGRES_USER: ${GRAPH_POSTGRES_USER:-graphnode}
+      POSTGRES_PASSWORD: ${GRAPH_POSTGRES_PASSWORD:-graphnode}
+      POSTGRES_DB: ${GRAPH_POSTGRES_DB:-graphnode}
+    volumes:
+      - graph_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${GRAPH_POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GRAPH_POSTGRES_USER:-graphnode} -d ${GRAPH_POSTGRES_DB:-graphnode}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - framesight-graph
+
+  # IPFS node for subgraph deployment
+  graph-ipfs:
+    image: ipfs/kubo:latest
+    container_name: framesight-graph-ipfs
+    environment:
+      IPFS_SWARM_KEY: ${IPFS_SWARM_KEY:-}
+      IPFS_PROFILE: ${IPFS_PROFILE:-server}
+    volumes:
+      - ipfs_data:/data/ipfs
+    ports:
+      - "${IPFS_API_PORT:-5001}:5001"
+      - "${IPFS_GATEWAY_PORT:-8081}:8080"
+      - "${IPFS_SWARM_PORT:-4001}:4001"
+    command:
+      - daemon
+      - --migrate=true
+      - --agent-version-suffix=docker
+    healthcheck:
+      test: ["CMD", "ipfs", "id"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - framesight-graph
+
+  # The Graph Node
+  graph-node:
+    image: graphprotocol/graph-node:latest
+    container_name: framesight-graph-node
+    depends_on:
+      graph-postgres:
+        condition: service_healthy
+      graph-ipfs:
+        condition: service_healthy
+    ports:
+      - "${GRAPH_NODE_ADMIN_PORT:-8020}:8020"
+      - "${GRAPH_NODE_RPC_PORT:-8030}:8030"
+      - "${GRAPH_NODE_METRICS_PORT:-8040}:8040"
+      - "${GRAPH_NODE_QUERY_PORT:-8000}:8000"
+    environment:
+      # Database connection for Graph Node
+      postgres_host: graph-postgres
+      postgres_port: 5432
+      postgres_user: ${GRAPH_POSTGRES_USER:-graphnode}
+      postgres_pass: ${GRAPH_POSTGRES_PASSWORD:-graphnode}
+      postgres_db: ${GRAPH_POSTGRES_DB:-graphnode}
+      
+      # IPFS connection
+      ipfs: "graph-ipfs:5001"
+      
+      # Ethereum RPC endpoints
+      ethereum: |
+        mainnet:${ETH_RPC_URL:-https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY}
+        polygon:${POLYGON_RPC_URL:-https://polygon-mainnet.g.alchemy.com/v2/YOUR_API_KEY}
+        optimism:${OPTIMISM_RPC_URL:-https://opt-mainnet.g.alchemy.com/v2/YOUR_API_KEY}
+        arbitrum:${ARBITRUM_RPC_URL:-https://arb-mainnet.g.alchemy.com/v2/YOUR_API_KEY}
+        base:${BASE_RPC_URL:-https://base-mainnet.g.alchemy.com/v2/YOUR_API_KEY}
+      
+      # Node configuration
+      GRAPH_NODE_CONFIG: /config/graph-node.toml
+      GRAPH_LOG: ${GRAPH_LOG_LEVEL:-info}
+      GRAPH_GRAPHQL_QUERY_TIMEOUT: ${GRAPH_QUERY_TIMEOUT:-30}
+      GRAPH_GRAPHQL_MAX_COMPLEXITY: ${GRAPH_MAX_COMPLEXITY:-1000000}
+      GRAPH_GRAPHQL_MAX_DEPTH: ${GRAPH_MAX_DEPTH:-32}
+      
+      # Performance tuning
+      GRAPH_STORE_CONNECTION_TIMEOUT: ${GRAPH_DB_TIMEOUT:-5000}
+      GRAPH_STORE_POOL_SIZE: ${GRAPH_DB_POOL_SIZE:-10}
+      
+      # Optional: Telemetry
+      GRAPH_NODE_ID: ${GRAPH_NODE_ID:-framesight-node-0}
+      
+    volumes:
+      - ./config:/config:ro
+      - graph_node_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - framesight-graph
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Subgraph deployment helper service
+  subgraph-deployer:
+    build:
+      context: ./subgraph-deployer
+      dockerfile: Dockerfile
+    container_name: framesight-subgraph-deployer
+    depends_on:
+      graph-node:
+        condition: service_healthy
+      graph-ipfs:
+        condition: service_healthy
+    environment:
+      GRAPH_NODE_ADMIN_ENDPOINT: http://graph-node:8020
+      IPFS_ENDPOINT: http://graph-ipfs:5001
+      SUBGRAPH_VERSION_LABEL: ${SUBGRAPH_VERSION_LABEL:-v1.0.0}
+    volumes:
+      - ./subgraphs:/subgraphs:ro
+    networks:
+      - framesight-graph
+    profiles:
+      - deploy
+
+volumes:
+  graph_postgres_data:
+  ipfs_data:
+  graph_node_data:
+
+networks:
+  framesight-graph:
+    driver: bridge
+    name: framesight-graph

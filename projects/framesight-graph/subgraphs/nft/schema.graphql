@@ -1,0 +1,99 @@
+type NFTContract @entity {
+  id: ID!
+  address: Bytes!
+  name: String
+  symbol: String
+  contractType: String!  # ERC721 or ERC1155
+  totalSupply: BigInt
+  transferCount: BigInt!
+  holderCount: BigInt!
+  createdAt: BigInt!
+  createdAtBlock: BigInt!
+  
+  # Relations
+  tokens: [NFTToken!]! @derivedFrom(field: "contract")
+  transfers: [NFTTransfer!]! @derivedFrom(field: "nftContract")
+}
+
+type NFTToken @entity {
+  id: ID!
+  tokenId: BigInt!
+  contract: NFTContract!
+  owner: Account!
+  uri: String
+  mintedAt: BigInt!
+  mintedAtBlock: BigInt!
+  burned: Boolean!
+  burnedAt: BigInt
+  
+  # Relations
+  transfers: [NFTTransfer!]! @derivedFrom(field: "token")
+}
+
+type NFTTransfer @entity {
+  id: ID!
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  nftContract: NFTContract!
+  token: NFTToken!
+  from: Account!
+  to: Account!
+  operator: Bytes
+  value: BigInt  # For ERC1155
+  tokenIds: [BigInt!]  # For batch transfers
+  values: [BigInt!]   # For batch transfers
+  isBatch: Boolean!
+  gasUsed: BigInt
+  gasPrice: BigInt
+}
+
+type Account @entity {
+  id: ID!
+  address: Bytes!
+  createdAt: BigInt!
+  createdAtBlock: BigInt!
+  
+  # NFT stats
+  tokensOwned: [NFTToken!]! @derivedFrom(field: "owner")
+  transfersFrom: [NFTTransfer!]! @derivedFrom(field: "from")
+  transfersTo: [NFTTransfer!]! @derivedFrom(field: "to")
+}
+
+# Aggregates for analytics
+type DailyNFTVolume @entity {
+  id: ID!  # contractAddress-dayTimestamp
+  nftContract: NFTContract!
+  date: String!
+  timestamp: BigInt!
+  transferCount: BigInt!
+  mintCount: BigInt!
+  burnCount: BigInt!
+  totalVolume: BigInt!  # Number of tokens transferred
+}
+
+type NFTMarketplaceStats @entity {
+  id: ID!  # contractAddress-marketplace-day
+  nftContract: NFTContract!
+  marketplace: String!  # e.g., "opensea", "blur", "looks_rare"
+  date: String!
+  timestamp: BigInt!
+  volume: BigInt!
+  saleCount: BigInt!
+  avgPrice: BigDecimal
+  minPrice: BigDecimal
+  maxPrice: BigDecimal
+}
+
+# Track collection metadata
+-type NFTCollectionMetadata @entity {
+  id: ID!
+  contract: NFTContract!
+  bannerImageUrl: String
+  imageUrl: String
+  description: String
+  externalLink: String
+  twitterUsername: String
+  discordUrl: String
+  updatedAt: BigInt!
+}
