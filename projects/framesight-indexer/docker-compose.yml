@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: framesight-timescaledb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-framesight}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-framesight}
+      POSTGRES_DB: ${POSTGRES_DB:-framesight}
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-framesight} -d ${POSTGRES_DB:-framesight}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: framesight-indexer
+    environment:
+      INDEXER_DATABASE_URL: postgres://${POSTGRES_USER:-framesight}:${POSTGRES_PASSWORD:-framesight}@timescaledb:5432/${POSTGRES_DB:-framesight}
+      INDEXER_MODE: ${INDEXER_MODE:-hybrid}
+      INDEXER_API_ENABLED: "true"
+      INDEXER_API_BIND_ADDRESS: 0.0.0.0:8080
+      RUST_LOG: ${RUST_LOG:-info}
+      # Chain RPC URLs
+      INDEXER_CHAINS_0_RPC_URL: ${ETH_RPC_URL}
+      INDEXER_CHAINS_0_WS_URL: ${ETH_WS_URL}
+      INDEXER_CHAINS_1_RPC_URL: ${POLYGON_RPC_URL}
+      INDEXER_CHAINS_1_WS_URL: ${POLYGON_WS_URL}
+      INDEXER_CHAINS_2_RPC_URL: ${OPTIMISM_RPC_URL}
+      INDEXER_CHAINS_2_WS_URL: ${OPTIMISM_WS_URL}
+      INDEXER_CHAINS_3_RPC_URL: ${ARBITRUM_RPC_URL}
+      INDEXER_CHAINS_3_WS_URL: ${ARBITRUM_WS_URL}
+      INDEXER_CHAINS_4_RPC_URL: ${BASE_RPC_URL}
+      INDEXER_CHAINS_4_WS_URL: ${BASE_WS_URL}
+    ports:
+      - "${INDEXER_PORT:-8080}:8080"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  timescale_data:

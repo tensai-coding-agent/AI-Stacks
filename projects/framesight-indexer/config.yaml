@@ -1,0 +1,65 @@
+# FrameSight Indexer Configuration
+
+# Database configuration
+database_url: "postgres://user:password@localhost:5432/framesight"
+
+# Indexing mode: realtime, backfill, or hybrid
+mode: hybrid
+
+# Backfill start block (0 = from deployment)
+backfill_start_block: 0
+
+# API server configuration
+api_enabled: true
+api_bind_address: "0.0.0.0:8080"
+
+# Performance settings
+max_concurrent_blocks: 10
+block_batch_size: 100
+reorg_safety_blocks: 12
+
+# Chain configurations
+chains:
+  - chain_id: 1
+    name: "ethereum"
+    rpc_url: "${ETH_RPC_URL}"
+    ws_url: "${ETH_WS_URL}"
+    entrypoint_v060: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    entrypoint_v070: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+    start_block: 17344420
+
+  - chain_id: 137
+    name: "polygon"
+    rpc_url: "${POLYGON_RPC_URL}"
+    ws_url: "${POLYGON_WS_URL}"
+    entrypoint_v060: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    entrypoint_v070: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+    start_block: 41386998
+
+  - chain_id: 10
+    name: "optimism"
+    rpc_url: "${OPTIMISM_RPC_URL}"
+    ws_url: "${OPTIMISM_WS_URL}"
+    entrypoint_v060: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    entrypoint_v070: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+    start_block: 94531480
+
+  - chain_id: 42161
+    name: "arbitrum"
+    rpc_url: "${ARBITRUM_RPC_URL}"
+    ws_url: "${ARBITRUM_WS_URL}"
+    entrypoint_v060: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    entrypoint_v070: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+    start_block: 87334593
+
+  - chain_id: 8453
+    name: "base"
+    rpc_url: "${BASE_RPC_URL}"
+    ws_url: "${BASE_WS_URL}"
+    entrypoint_v060: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    entrypoint_v070: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+    start_block: 3980519
+
+# Optional: Kafka configuration for message queue
+# kafka_brokers: "localhost:9092"
+# kafka_topic: "framesight-events"
