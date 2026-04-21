@@ -1,0 +1,30 @@
+{
+  "name": "@ai-stacks/core",
+  "version": "0.1.0",
+  "description": "Core utilities and types for AI Stacks",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  },
+  "dependencies": {}
+}
+Co-Authored-By: Paperclip <noreply@paperclip.ing>
