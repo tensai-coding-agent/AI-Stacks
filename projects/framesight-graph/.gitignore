@@ -1,0 +1,34 @@
+# FrameSight Graph Node
+
+# Dependencies
+node_modules/
+build/
+generated/
+
+# Environment
+.env
+.env.local
+
+# IPFS data
+ipfs_data/
+
+# PostgreSQL data
+graph_postgres_data/
+graph_node_data/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes
+data/

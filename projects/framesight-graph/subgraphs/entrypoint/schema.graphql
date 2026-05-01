@@ -1,0 +1,194 @@
+type UserOperation @entity {
+  id: ID!  # userOpHash
+  userOpHash: Bytes!
+  entryPoint: Bytes!
+  sender: Account!
+  paymaster: Bytes
+  nonce: BigInt!
+  success: Boolean!
+  actualGasCost: BigInt!
+  actualGasUsed: BigInt!
+  
+  # v0.7.0 specific fields
+  prefund: BigInt
+  gasPrice: BigInt
+  paymasterPostOpGasLimit: BigInt
+  paymasterValidationGasLimit: BigInt
+  
+  # Transaction info
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  
+  # Optional decoded fields
+  initCode: Bytes
+  callData: Bytes
+  callGasLimit: BigInt
+  verificationGasLimit: BigInt
+  preVerificationGas: BigInt
+  maxFeePerGas: BigInt
+  maxPriorityFeePerGas: BigInt
+  
+  # Related entities
+  revertReason: UserOperationRevertReason @derivedFrom(field: "userOp")
+  accountDeployed: AccountDeployed @derivedFrom(field: "userOpHash")
+}
+
+type AccountDeployed @entity {
+  id: ID!  # userOpHash
+  userOpHash: Bytes!
+  sender: Account!
+  factory: Bytes!
+  paymaster: Bytes!
+  
+  # Transaction info
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  
+  # Related
+  userOp: UserOperation
+}
+
+type UserOperationRevertReason @entity {
+  id: ID!  # userOpHash
+  userOpHash: Bytes!
+  sender: Bytes!
+  nonce: BigInt!
+  
+  # v0.7.0 specific
+  revertReason: Bytes
+  
+  # Transaction info
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  
+  # Related
+  userOp: UserOperation
+}
+
+type Account @entity {
+  id: ID!  # smart account address
+  address: Bytes!
+  createdAt: BigInt!
+  createdAtBlock: BigInt!
+  
+  # Stats
+  totalOperations: BigInt!
+  successfulOperations: BigInt!
+  failedOperations: BigInt!
+  
+  # Factory info
+  factory: Bytes
+  factoryUsedAt: BigInt
+  
+  # Relations
+  operations: [UserOperation!]! @derivedFrom(field: "sender")
+  deployments: [AccountDeployed!]! @derivedFrom(field: "sender")
+}
+
+type Paymaster @entity {
+  id: ID!  # paymaster address
+  address: Bytes!
+  createdAt: BigInt!
+  
+  # Stats
+  totalOperations: BigInt!
+  totalGasPaid: BigInt!
+  
+  # Relations
+  operations: [UserOperation!]! @derivedFrom(field: "paymaster")
+}
+
+type Bundler @entity {
+  id: ID!  # bundler address
+  address: Bytes!
+  firstSeenAt: BigInt!
+  lastSeenAt: BigInt!
+  
+  # Stats
+  totalBundles: BigInt!
+  totalUserOps: BigInt!
+  totalGasCollected: BigInt!
+  
+  # Relations
+  operations: [UserOperation!]! @derivedFrom(field: "bundler")
+}
+
+type Factory @entity {
+  id: ID!  # factory address
+  address: Bytes!
+  createdAt: BigInt!
+  
+  # Stats
+  totalAccountsDeployed: BigInt!
+  
+  # Relations
+  deployments: [AccountDeployed!]! @derivedFrom(field: "factory")
+  accounts: [Account!]! @derivedFrom(field: "factory")
+}
+
+# Aggregates for analytics
+type DailyUserOperationStats @entity {
+  id: ID!  # chainId-date
+  chainId: Int!
+  date: String!
+  timestamp: BigInt!
+  
+  # Counts
+  totalOperations: BigInt!
+  successfulOperations: BigInt!
+  failedOperations: BigInt!
+  deployments: BigInt!
+  
+  # Gas stats
+  totalGasUsed: BigInt!
+  avgGasUsed: BigDecimal!
+  totalGasCost: BigInt!
+  avgGasCost: BigDecimal!
+  
+  # Unique addresses
+  uniqueSenders: BigInt!
+  uniquePaymasters: BigInt!
+  uniqueBundlers: BigInt!
+}
+
+type HourlyUserOperationStats @entity {
+  id: ID!  # chainId-hourTimestamp
+  chainId: Int!
+  hour: String!
+  timestamp: BigInt!
+  
+  # Counts
+  totalOperations: BigInt!
+  successfulOperations: BigInt!
+  failedOperations: BigInt!
+  deployments: BigInt!
+  
+  # Gas stats
+  totalGasUsed: BigInt!
+  totalGasCost: BigInt!
+}
+
+# EntryPoint deposits/withdrawals
+type EntryPointDeposit @entity {
+  id: ID!  # txHash-logIndex
+  account: Bytes!
+  amount: BigInt!
+  
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}
+
+type EntryPointWithdrawal @entity {
+  id: ID!  # txHash-logIndex
+  account: Bytes!
+  withdrawTo: Bytes!
+  amount: BigInt!
+  
+  transactionHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+}

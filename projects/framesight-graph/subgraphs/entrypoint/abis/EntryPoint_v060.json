@@ -1,0 +1,128 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "userOpHash", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "sender", "type": "address" },
+      { "indexed": true, "internalType": "address", "name": "paymaster", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "nonce", "type": "uint256" },
+      { "indexed": false, "internalType": "bool", "name": "success", "type": "bool" },
+      { "indexed": false, "internalType": "uint256", "name": "actualGasCost", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "actualGasUsed", "type": "uint256" }
+    ],
+    "name": "UserOperationEvent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "userOpHash", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "sender", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "nonce", "type": "uint256" },
+      { "indexed": false, "internalType": "bytes", "name": "revertReason", "type": "bytes" }
+    ],
+    "name": "UserOperationRevertReason",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "bytes32", "name": "userOpHash", "type": "bytes32" },
+      { "indexed": true, "internalType": "address", "name": "sender", "type": "address" },
+      { "indexed": true, "internalType": "address", "name": "factory", "type": "address" },
+      { "indexed": false, "internalType": "address", "name": "paymaster", "type": "address" }
+    ],
+    "name": "AccountDeployed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "account", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "totalDeposit", "type": "uint256" }
+    ],
+    "name": "Deposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "account", "type": "address" },
+      { "indexed": false, "internalType": "address", "name": "withdrawAddress", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "Withdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "aggregator", "type": "address" }
+    ],
+    "name": "SignatureAggregatorChanged",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes", "name": "initCode", "type": "bytes" },
+      { "internalType": "address", "name": "sender", "type": "address" },
+      { "internalType": "bytes", "name": "paymasterAndData", "type": "bytes" }
+    ],
+    "name": "getSenderAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "sender", "type": "address" }
+    ],
+    "name": "getDepositInfo",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint112", "name": "deposit", "type": "uint112" },
+          { "internalType": "bool", "name": "staked", "type": "bool" },
+          { "internalType": "uint112", "name": "stake", "type": "uint112" },
+          { "internalType": "uint32", "name": "unstakeDelaySec", "type": "uint32" },
+          { "internalType": "uint64", "name": "withdrawTime", "type": "uint64" }
+        ],
+        "internalType": "struct IStakeManager.DepositInfo",
+        "name": "info",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "account", "type": "address" }
+    ],
+    "name": "depositTo",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address payable", "name": "withdrawAddress", "type": "address" },
+      { "internalType": "uint256", "name": "withdrawAmount", "type": "uint256" }
+    ],
+    "name": "withdrawTo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

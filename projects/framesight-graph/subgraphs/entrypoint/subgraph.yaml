@@ -1,0 +1,92 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  # EntryPoint v0.6.0
+  - kind: ethereum
+    name: EntryPoint_v060
+    network: mainnet
+    source:
+      address: "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+      abi: EntryPoint
+      startBlock: 17023105  # EntryPoint v0.6.0 deployment
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - UserOperation
+        - AccountDeployed
+        - UserOperationRevertReason
+      abis:
+        - name: EntryPoint
+          file: ./abis/EntryPoint_v060.json
+      eventHandlers:
+        - event: UserOperationEvent(indexed bytes32,indexed address,indexed address,uint256,bool,uint256,uint256)
+          handler: handleUserOperationEvent
+        - event: AccountDeployed(indexed bytes32,indexed address,indexed address,address)
+          handler: handleAccountDeployed
+        - event: UserOperationRevertReason(indexed bytes32,indexed address,uint256,bytes)
+          handler: handleUserOperationRevertReason
+      file: ./src/mapping.ts
+
+  # EntryPoint v0.7.0
+  - kind: ethereum
+    name: EntryPoint_v070
+    network: mainnet
+    source:
+      address: "0x0000000071727De22E5E9d8BAf0edAc6f37da032"
+      abi: EntryPoint
+      startBlock: 19272608  # EntryPoint v0.7.0 deployment
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - UserOperation
+        - AccountDeployed
+        - UserOperationRevertReason
+        - UserOperationEvent_v070
+        - UserOperationRevertReason_v070
+      abis:
+        - name: EntryPoint
+          file: ./abis/EntryPoint_v070.json
+      eventHandlers:
+        - event: UserOperationEvent(indexed bytes32,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,bytes32)
+          handler: handleUserOperationEvent_v070
+        - event: AccountDeployed(indexed bytes32,indexed address,indexed address,address)
+          handler: handleAccountDeployed
+        - event: UserOperationRevertReason(indexed bytes32,indexed address,uint256,uint256,bytes)
+          handler: handleUserOperationRevertReason_v070
+        - event: BeforeExecution()
+          handler: handleBeforeExecution
+        - event: Deposited(indexed address,uint256)
+          handler: handleDeposited
+        - event: Withdrawn(indexed address,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: SignatureAggregatorChanged(indexed address)
+          handler: handleSignatureAggregatorChanged
+      file: ./src/mapping.ts
+
+templates:
+  - kind: ethereum
+    name: EntryPoint
+    network: mainnet
+    source:
+      abi: EntryPoint
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - UserOperation
+        - AccountDeployed
+      abis:
+        - name: EntryPoint
+          file: ./abis/EntryPoint_v070.json
+      eventHandlers:
+        - event: UserOperationEvent(indexed bytes32,indexed address,indexed address,uint256,uint256,uint256,uint256,uint256,bytes32)
+          handler: handleUserOperationEvent_v070
+        - event: AccountDeployed(indexed bytes32,indexed address,indexed address,address)
+          handler: handleAccountDeployed
+      file: ./src/mapping.ts
