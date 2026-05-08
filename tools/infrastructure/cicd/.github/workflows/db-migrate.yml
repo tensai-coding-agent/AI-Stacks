@@ -1,0 +1,159 @@
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      migration_type:
+        description: 'Migration type'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - rollback
+          - validate
+      script_path:
+        description: 'Path to migration script (e.g., db/migrations/001_add_users.sql)'
+        required: false
+        type: string
+
+concurrency:
+  group: db-migration-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Migration
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Validate connection
+        env:
+          DATABASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.DATABASE_URL_PRODUCTION || secrets.DATABASE_URL_STAGING }}
+        run: |
+          echo "Testing database connection..."
+          psql "$DATABASE_URL" -c "SELECT version();"
+      
+      - name: Check migration script
+        if: github.event.inputs.script_path != ''
+        run: |
+          if [ ! -f "${{ github.event.inputs.script_path }}" ]; then
+            echo "Migration script not found: ${{ github.event.inputs.script_path }}"
+            exit 1
+          fi
+          echo "Migration script validated: ${{ github.event.inputs.script_path }}"
+
+  backup:
+    name: Create Backup
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Create backup
+        env:
+          DATABASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.DATABASE_URL_PRODUCTION || secrets.DATABASE_URL_STAGING }}
+          BACKUP_PREFIX: ${{ github.event.inputs.environment }}-${{ github.run_id }}
+        run: |
+          echo "Creating backup..."
+          pg_dump "$DATABASE_URL" --format=custom --file="backup-${BACKUP_PREFIX}.dump"
+          echo "Backup created: backup-${BACKUP_PREFIX}.dump"
+      
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.event.inputs.environment }}-${{ github.run_id }}
+          path: backup-*.dump
+          retention-days: 30
+
+  migrate:
+    name: Run Migration
+    needs: backup
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Apply migration
+        if: github.event.inputs.migration_type == 'apply'
+        env:
+          DATABASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.DATABASE_URL_PRODUCTION || secrets.DATABASE_URL_STAGING }}
+        run: |
+          if [ -n "${{ github.event.inputs.script_path }}" ]; then
+            echo "Applying migration: ${{ github.event.inputs.script_path }}"
+            psql "$DATABASE_URL" -f "${{ github.event.inputs.script_path }}"
+          else
+            echo "Applying all pending migrations from db-migration/"
+            for f in db-migration/*.sql; do
+              echo "Applying: $f"
+              psql "$DATABASE_URL" -f "$f" || exit 1
+            done
+          fi
+          echo "Migration applied successfully"
+      
+      - name: Validate data
+        if: github.event.inputs.migration_type == 'validate'
+        env:
+          DATABASE_URL: ${{ github.event.inputs.environment == 'production' && secrets.DATABASE_URL_PRODUCTION || secrets.DATABASE_URL_STAGING }}
+        run: |
+          echo "Running data validation..."
+          psql "$DATABASE_URL" -c "SELECT schemaname, tablename, n_tup_ins FROM pg_stat_user_tables WHERE schemaname = 'public' ORDER BY n_tup_ins DESC;"
+          echo "Validation complete"
+
+  notify:
+    name: Notify Team
+    needs: migrate
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Notify Slack - Success
+        if: needs.migrate.result == 'success'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ Database migration completed on ${{ github.event.inputs.environment }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Notify Slack - Failure
+        if: needs.migrate.result == 'failure'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ Database migration FAILED on ${{ github.event.inputs.environment }} - Run ID: ${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

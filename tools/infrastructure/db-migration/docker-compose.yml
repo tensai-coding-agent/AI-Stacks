@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # TimescaleDB with pgvector
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: framesight-db
+    environment:
+      POSTGRES_USER: framesight
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-framesight_dev}
+      POSTGRES_DB: framesight
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U framesight"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - framesight-network
+
+  # Redis for caching and task queue
+  redis:
+    image: redis:7-alpine
+    container_name: framesight-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - framesight-network
+
+  # Grafana for monitoring (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: framesight-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: "grafana-timescaledb-datasource"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - timescaledb
+    networks:
+      - framesight-network
+
+  # PGAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: framesight-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@tensai.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - timescaledb
+    networks:
+      - framesight-network
+
+volumes:
+  timescale_data:
+  redis_data:
+  grafana_data:
+
+networks:
+  framesight-network:
+    driver: bridge
