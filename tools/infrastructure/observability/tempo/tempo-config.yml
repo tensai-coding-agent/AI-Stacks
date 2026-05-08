@@ -1,0 +1,44 @@
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+
+query_frontend:
+  max_outstanding_per_tenant: 100
+
+querier:
+  frontend_worker:
+    frontend_address: tempo:9095
+
+ingester:
+  trace_idle_period: 10s
+  max_block_bytes: 1000000
+  max_block_duration: 5m
+  flush_check_period: 10s
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+compactor:
+  compaction:
+    block_retention: 168h  # 7 days
+    compacted_block_retention: 1h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces
+    wal:
+      path: /tmp/tempo/wal
+
+overrides:
+  defaults:
+    ingestion:
+      rate_limit_bytes: 10000000  # 10MB per second
+      burst_size_bytes: 20000000  # 20MB burst
