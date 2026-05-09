@@ -1,0 +1,31 @@
+{
+  "name": "@ai-stacks/job-queue",
+  "version": "0.1.0",
+  "description": "Job queue system with BullMQ and Redis for AI-Stacks async processing",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./workers": {
+      "import": "./dist/workers/index.js",
+      "types": "./dist/workers/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^5.1.0",
+    "ioredis": "^5.3.2",
+    "@ai-stacks/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  }
+}
