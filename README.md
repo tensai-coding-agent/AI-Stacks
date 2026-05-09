@@ -74,15 +74,17 @@ ai-stacks/
 
 | Package | Description | Status |
 |---------|-------------|--------|
-| `@ai-stacks/core` | Core utilities, types, shared configurations | Planned |
-| `@ai-stacks/ui` | React component library with AI-themed components | Planned |
-| `@ai-stacks/ai` | AI provider integrations, LLM utilities, embeddings | Planned |
+| `@ai-stacks/core` | Core utilities, types, shared configurations | ✅ Active |
+| `@ai-stacks/database` | Multi-tenant PostgreSQL with Drizzle ORM | ✅ Active |
+| `@ai-stacks/job-queue` | BullMQ job processing with Redis | ✅ Active |
 
 ## Projects Index
 
 | Project | Description | Status |
 |---------|-------------|--------|
-| (No projects yet) | | |
+| `api-gateway` | Fastify API gateway with OpenAPI | ✅ Phase 1 Complete |
+| `ai-service` | AI document analysis & summarization | ✅ Phase 1 Complete |
+| `framesight-graph` | Blockchain indexing project | ✅ Active |
 
 ## Available Scripts
 
@@ -134,12 +136,28 @@ The `docker-compose.yml` provides local development infrastructure:
 
 ## Roadmap
 
-- [x] Repository structure and tooling
-- [x] CI/CD pipeline
+### Phase 1: Foundation ✅ Complete
+- [x] Repository structure and tooling (pnpm + Turborepo)
+- [x] CI/CD pipeline with GitHub Actions
 - [x] Development environment (Docker Compose)
-- [ ] Core packages (ui, ai, core)
-- [ ] First AI application
-- [ ] Documentation site
+- [x] API Gateway (Fastify + OpenAPI)
+- [x] Database layer (Multi-tenant PostgreSQL + Drizzle)
+- [x] Job Queue system (BullMQ + Redis)
+- [x] AI Provider Abstraction (OpenAI, Anthropic)
+- [x] Document Processing API
+- [x] AI Summarization API
+
+### Phase 2: Enterprise Security 🔲 In Planning
+- [ ] SSO & Authentication (SAML/OIDC)
+- [ ] GDPR/CCPA Compliance
+- [ ] Data Encryption (Rest & Transit)
+- [ ] SOC 2 Type II Readiness
+
+### Phase 3: Scalability & DevEx 🔲 Planned
+- [ ] Kubernetes Deployment Architecture
+- [ ] CDN & Global Performance
+- [ ] SDK Development (Python, Node.js, Go)
+- [ ] Developer Portal & Documentation
 
 ## License
 
